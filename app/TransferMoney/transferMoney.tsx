@@ -35,8 +35,8 @@ export default function TransferMoney() {
   const [firstName, setFirstName] = useState("Samuel");
   const [balance, setBalance] = useState(500);
   const [amountToSend, setAmountToSend] = useState(0);
-  const [amountScreen, setAmountScreen] = useState(false);
-  const [recipientScreen, setRecipientScreen] = useState(true);
+  const [amountScreen, setAmountScreen] = useState(true);
+  const [recipientScreen, setRecipientScreen] = useState(false);
   const [confirmationScreen, setConfirmationScreen] = useState(false);
   const [searchResults, setSearchResults] = useState<recipientDataType[]>([]);
   const [selectedRecipient, setSelectedRecipient] =
@@ -296,7 +296,123 @@ export default function TransferMoney() {
       <div
         className="flex flex-col items-start justify-start"
         style={{ width: "100%" }}
-      ></div>
+      >
+        <div className=" flex flex-col ">
+          <div className=" ">
+            <div className=" mb-[15px] flex flex-col items-center justify-center justify-items-center ">
+              <span className=" text-[17px] sm:text-[18px] md:text-[19px] lg:text-[20px] text-black text-center ">
+                Recipients Details!
+              </span>
+              <span className=" mt-[5px] text-[#737373] text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px] ">
+                Please review all the details before sending the funds!
+              </span>
+            </div>
+            <div className=" rounded-[10px] border-separate border-green-500 border-[2px] border-dotted p-[5px] ">
+              <div className=" flex justify-between mb-[10px] ">
+                <span className=" text-[#313131] text-center text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
+                  Amount to be sent:
+                </span>
+                <span className=" text-[#313131] text-center text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  K {amountToSend}
+                </span>
+              </div>
+
+              <div className=" flex justify-between mb-[10px] ">
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  Name:
+                </span>
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  {selectedRecipient?.firstName} {selectedRecipient?.lastName}
+                </span>
+              </div>
+
+              <div className=" flex justify-between mb-[10px] ">
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  Email:
+                </span>
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  {selectedRecipient?.email}
+                </span>
+              </div>
+
+              <div className=" flex justify-between mb-[10px] ">
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  Phone Number:
+                </span>
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  {selectedRecipient?.phoneNumber}
+                </span>
+              </div>
+
+              <div className=" flex justify-between mb-[10px] ">
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  Date:
+                </span>
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] "
+        >
+          <span className=" mt-[5px] text-[#737373] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] py-[ 12px]">
+            Enter your password to confirm your transaction!
+          </span>
+          <label
+            className=" mt-[10px] text-[black] text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] py-[12px] "
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="px-[10px] text-black rounded-[10px] border-[1px] border-[#453E3A] hover:border-[#6366f1] text-[16px] sm:text-lg md:text-lg lg:text-lg py-[8px] sm:py-[12px] md:py-[12px] lg:py-[12px]"
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 8,
+                message: "Password must be at least 8 characters long",
+              },
+              pattern: {
+                value:
+                  /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                message:
+                  "Password must contain at least one uppercase letter, one number, and one special character",
+              },
+            })}
+          />
+          <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
+            <button
+              type="button"
+              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
+              onClick={prevscreen}
+            >
+              Previous
+            </button>
+            {!loading ? (
+              <button
+                type="submit"
+                className={`text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] px-[12px] ${
+                  isValid ? "bg-black text-white" : "bg-gray-400 text-gray-700"
+                }`}
+                disabled={!isValid}
+              >
+                Send
+              </button>
+            ) : (
+              <div className=" mt-[20px] items-center justify-items-center">
+                <div className=" items-center ml-[10px]">
+                  <ThreeDot color="black" size="small" />
+                </div>
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
     );
   };
 
@@ -308,38 +424,64 @@ export default function TransferMoney() {
         </span>
       </div>
       <div
-        className="flex flex-row items-start justify-center p-[20px] "
+        className=" mr-[] sm:mr-[] md:mr-[30px] lg:mr-[30px] flex flex-col sm:flex-col md:flex-row lg:flex-row items-center justify-center p-[20px] "
         style={{ width: "100%" }}
       >
         <div
-          className="flex flex-col items-start justify-start mr-[20px]"
+          className=" mb-[15px] sm:mb-[15px] md:mb-[] lg:mb-[] flex flex-row sm:flex-row md:flex-col lg:flex-col items-start justify-center gap-5"
           style={{ width: "100%" }}
         >
-          <span
-            className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
-              amountScreen ? " text-[#000000] text-bold " : " text-[#6b6b6b] "
+          <div
+            className={` px-[10px] py-[1px] rounded-full  ${
+              amountScreen
+                ? " border-[#000000] border-[2px] "
+                : " border-[1px] border-[#6b6b6b] "
             }`}
           >
-            Amount
-          </span>
-          <span
-            className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+            <span
+              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                amountScreen ? " text-[#000000] text-bold " : " text-[#6b6b6b] "
+              }`}
+            >
+              1
+            </span>
+          </div>
+
+          <div
+            className={` px-[10px] py-[1px] rounded-full  ${
               recipientScreen
-                ? " text-[#000000] text-bold "
-                : " text-[#6b6b6b] "
+                ? " border-[#000000] border-[2px] "
+                : " border-[#6b6b6b] border-[1px] "
             }`}
           >
-            Recipient
-          </span>
-          <span
-            className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+            <span
+              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                recipientScreen
+                  ? " text-[#000000] text-bold "
+                  : " text-[#6b6b6b] "
+              }`}
+            >
+              2
+            </span>
+          </div>
+
+          <div
+            className={` px-[10px] py-[1px] rounded-full  ${
               confirmationScreen
-                ? " text-[#000000] text-bold "
-                : " text-[#6b6b6b] "
+                ? " border-[#000000] border-[2px] "
+                : " border-[#6b6b6b] border-[1px] "
             }`}
           >
-            confirmation
-          </span>
+            <span
+              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                confirmationScreen
+                  ? " text-[#000000] text-bold "
+                  : " text-[#6b6b6b] "
+              }`}
+            >
+              3
+            </span>
+          </div>
         </div>
         {amountScreen && mountAmountScreen()}
         {recipientScreen && mountRecipientScreen()}

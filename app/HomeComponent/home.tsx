@@ -42,37 +42,40 @@ export default function HomeComponent() {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center font-[family-name:var(--font-geist-sans)] flex-col">
+    <div className=" mb-[50px] flex items-center font-[family-name:var(--font-geist-sans)] flex-col">
+      <div className=" mt-[50px]"></div>
       <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-        Samuel's Digital Wallet App
+        {greeting} {firstName}
       </span>
-      <div className=" flex flex-row min-h-screen items-center  ">
-        <div className=" flex-col shadow-lg rounded-[12px] p-[100px] ">
-          <div className="flex justify-items-center items-center flex-col mb-[10px] ">
-            <span
-              className=" text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-bold text-"
-              id="greeting"
-            >
-              {" "}
-              {greeting} {firstName}
-            </span>
-          </div>
-          <div className=" flex flex-col " id="balance">
-            <span className=" mt-[10px] text-start text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-">
+      <div className=" flex flex-col items-center  ">
+        {/* <div className="flex justify-items-center items-center flex-col mb-[10px] ">
+          <span
+            className=" text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-bold text-"
+            id="greeting"
+          >
+            {" "}
+            {greeting} {firstName}
+          </span>
+        </div> */}
+        <div className="flex flex-col items-start shadow-lg rounded-[12px] py-[50px] px-[300px]">
+          <div
+            className="flex flex-col items-start justify-items-start "
+            id="balance"
+          >
+            <span className="mt-[10px] text-start text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
               Your balance
             </span>
-            <span className=" text-[#278727] text-[30px] sm:text-[35px] md:text-[40px] lg:text-[45px] font-bold ">
+            <span className="text-[#278727] text-[30px] sm:text-[35px] md:text-[40px] lg:text-[45px] font-bold">
               K{balance}
             </span>
           </div>
         </div>
-        <div className=" flex flex-col gap-10">
-          <button className=" bg-black ml-[20px] p-[10px] rounded-[10px]">
-            <span>Send Money</span>
-          </button>
-          <button className=" bg-black ml-[20px] p-[10px] rounded-[10px]">
-            <span>transaction history</span>
-          </button>
+        <div className=" flex flex-col mt-[30px]">
+          <Link href="/TransferMoney" passHref>
+            <button className=" bg-black ml-[20px] p-[10px] rounded-[10px]">
+              <span>Send Money</span>
+            </button>
+          </Link>
         </div>
       </div>
     </div>
