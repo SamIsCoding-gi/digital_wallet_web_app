@@ -3,6 +3,7 @@ import React, { useState, useEffect, use } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import TransactionHistory from "../TransactionHistory/transactionHistory";
 import { ThreeDot } from "react-loading-indicators";
 
 interface userDataType {
@@ -70,41 +71,47 @@ export default function HomeComponent() {
   };
 
   return (
-    <div className=" mb-[50px] flex items-center font-[family-name:var(--font-geist-sans)] flex-col">
-      {errorLoadingUserData ? (
-        <div className="text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-          Error loading user data. Please try again later.
-        </div>
-      ) : (
-        <>
-          <div className=" mt-[50px]"></div>
-          <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-        {greeting} {firstName}
-          </span>
-          <div className=" flex flex-col items-center  ">
-        <div className="flex flex-col items-start shadow-lg rounded-[12px] py-[50px] px-[300px]">
-          <div
-            className="flex flex-col items-start justify-items-start "
-            id="balance"
-          >
-            <span className="mt-[10px] text-start text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
-          Your balance
-            </span>
-            <span className="text-[#278727] text-[30px] sm:text-[35px] md:text-[40px] lg:text-[45px] font-bold">
-          K{balance}
-            </span>
+    <div className=" h-screen  flex  font-[family-name:var(--font-geist-sans)] flex-col ">
+      <div
+        className=" mb-[50px] flex flex-col items-center justify-items-center "
+        id="home"
+      >
+        {errorLoadingUserData ? (
+          <div className="text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
+            Error loading user data. Please try again later.
           </div>
-        </div>
-        <div className=" flex flex-col mt-[30px]">
-          <Link href="/TransferMoney" passHref>
-            <button className=" bg-black ml-[20px] p-[10px] rounded-[10px]">
-          <span>Send Money</span>
-            </button>
-          </Link>
-        </div>
-          </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div className=" mt-[50px]"></div>
+            <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
+              {greeting} {firstName}
+            </span>
+            <div className=" flex flex-col items-center  ">
+              <div className="flex flex-col items-start shadow-lg rounded-[12px] py-[50px] px-[300px]">
+                <div
+                  className="flex flex-col items-start justify-items-start "
+                  id="balance"
+                >
+                  <span className="mt-[10px] text-start text-[#737373] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                    Your balance
+                  </span>
+                  <span className="text-[#278727] text-[30px] sm:text-[35px] md:text-[40px] lg:text-[45px] font-bold">
+                    K{balance}
+                  </span>
+                </div>
+              </div>
+              <div className=" flex flex-col mt-[30px]">
+                <Link href="/TransferMoney" passHref>
+                  <button className=" bg-black ml-[20px] p-[10px] rounded-[10px]">
+                    <span>Send Money</span>
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      {!errorLoadingUserData && <TransactionHistory />}
     </div>
   );
 }

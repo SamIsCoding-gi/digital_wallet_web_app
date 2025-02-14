@@ -10,7 +10,7 @@ export default function Home() {
     <div className=" flex-1 bg-white font-[family-name:var(--font-geist-sans)]">
       {/* <SignIn /> */}
       <HomeComponent />
-      <TransactionHistory />
+      {/* <TransactionHistory /> */}
       {/* <TransferMoney /> */}
     </div>
   );
