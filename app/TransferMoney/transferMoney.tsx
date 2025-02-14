@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
-import { useRouter } from "next/router";
+import router, { useRouter } from "next/router";
 import Link from "next/link";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -32,7 +32,9 @@ interface recipientDataType {
 
 export default function TransferMoney() {
   const [loading, setLoading] = useState(false);
+  const [lLoadingEmails, setLoadingEmails] = useState(false);
   const [firstName, setFirstName] = useState("Samuel");
+  const [errorMessage, setErrorMessage] = useState("");
   const [balance, setBalance] = useState(500);
   const [amountToSend, setAmountToSend] = useState(0);
   const [amountScreen, setAmountScreen] = useState(true);
@@ -81,12 +83,31 @@ export default function TransferMoney() {
   ];
 
   // compares password and confirms it with retyped password
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     setLoading(true);
-    console.log(data);
-    setTimeout(() => {
+    try {
+      const response: Response = await fetch("/api/transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amountToSend: amountToSend,
+          recipient: selectedRecipient,
+          password: data.password,
+        }),
+      });
+      const responseData = await response.json();
+      console.log(responseData);
+      if (responseData.success) {
+        setLoading(false);
+        router.push("HomeComponent");
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorMessage((error as any).message);
       setLoading(false);
-    }, 9000);
+    }
   };
 
   // function to navigate to next screen
@@ -189,13 +210,28 @@ export default function TransferMoney() {
     );
   };
 
-  const handleEmailSearch = (email: string) => {
-    // Simulate an API call to search for recipients by email
-    const results = genericUser.filter((user) =>
-      user.email.toLowerCase().includes(email.toLowerCase())
-    );
-    console.log(results);
+  // function to search for recipient by email
+  const searchRecipient = (data: recipientDataType[], email: string) => {
+    const results = data.filter((user) => user.email === email);
     setSearchResults(results);
+    setLoadingEmails(false);
+  };
+
+  // function to search for recipient by email
+  const handleEmailSearch = async (email: string) => {
+    setErrorMessage("");
+    setLoadingEmails(true);
+    try {
+      const response = await fetch("/api/userData");
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        searchRecipient(data, email);
+      }
+    } catch (error) {
+      setLoadingEmails(false);
+      console.error(error);
+    }
   };
 
   // screen for selection of reciepient
@@ -232,7 +268,7 @@ export default function TransferMoney() {
           />
         </form>
 
-        {searchResults.length > 0 && (
+        {searchResults.length > 0 ? (
           <div className="mt-[10px] w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px]">
             {searchResults.map((result) => (
               <div
@@ -263,32 +299,36 @@ export default function TransferMoney() {
               </div>
             ))}
           </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center ">
+            <span className="text-[#ff0000] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+              No users found.
+            </span>
+          </div>
         )}
-
-        <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
-          <button
-            type="button"
-            className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
-            onClick={prevscreen}
-          >
-            Previous
-          </button>
-          <button
-            type="submit"
-            className={`text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] px-[10px] ${
-              selectedRecipient
-                ? "bg-black text-white"
-                : "bg-gray-400 text-gray-700"
-            }`}
-            disabled={!selectedRecipient}
-            onClick={nextscreen}
-          >
-            Next
-          </button>
-        </div>
       </div>
     );
   };
+
+  <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
+    <button
+      type="button"
+      className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
+      onClick={prevscreen}
+    >
+      Previous
+    </button>
+    <button
+      type="submit"
+      className={`text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] px-[10px] ${
+        selectedRecipient ? "bg-black text-white" : "bg-gray-400 text-gray-700"
+      }`}
+      disabled={!selectedRecipient}
+      onClick={nextscreen}
+    >
+      Next
+    </button>
+  </div>;
 
   // screen for confirmation of transaction
   const mountConfirmationScreen = () => {
@@ -411,6 +451,11 @@ export default function TransferMoney() {
               </div>
             )}
           </div>
+          {errorMessage && (
+            <div className=" mt-[20px] text-red-500 text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] font-bold">
+              {errorMessage}
+            </div>
+          )}
         </form>
       </div>
     );

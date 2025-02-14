@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, set } from "react-hook-form";
 import { ThreeDot } from "react-loading-indicators";
 
 // data for signup form
@@ -25,7 +25,7 @@ export default function CreateAccount() {
   } = useForm({
     mode: "onChange",
   });
-
+  const [errorCreatingAccount, setErrorCreatingAccount] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // compares password and confirms it with retyped password
@@ -38,6 +38,39 @@ export default function CreateAccount() {
     setTimeout(() => {
       setLoading(false);
     }, 9000);
+  };
+
+  // creates user account
+  const createAccount = async (data: IFormInput) => {
+    setLoading(true);
+    const userId = `user_${new Date().getTime()}`;
+    const dataWithId = { ...data, id: userId };
+    try {
+      const response = await fetch("/api/create-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataWithId),
+      });
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log(responseData);
+
+        // Save user data to local storage
+        localStorage.setItem(userId, JSON.stringify(dataWithId));
+
+        setLoading(false);
+      } else {
+        console.error("Failed to create account");
+        setErrorCreatingAccount(true);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Failed to create account", error);
+      setLoading(false);
+      setErrorCreatingAccount(true);
+    }
   };
 
   return (
@@ -206,6 +239,14 @@ export default function CreateAccount() {
                 <ThreeDot color="black" size="small" />
               </div>
             </div>
+          )}
+          {errorCreatingAccount && (
+            <p
+              className="text-red-700 text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] "
+              role="alert"
+            >
+              Error creating account
+            </p>
           )}
         </form>
       </div>

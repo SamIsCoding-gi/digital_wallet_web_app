@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
-import { useRouter } from "next/router";
+import router, { useRouter } from "next/router";
 import Link from "next/link";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -23,14 +23,53 @@ export default function SignIn() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [errorSigningIn, setErrorSigningIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // check if user is logged in
+  const checkIfUserIsLoggedIn = () => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      // User is logged in, redirect to home page
+      router.push("HomeComponent");
+    }
+  };
+
+  // Check if user is logged in on component mount
+  React.useEffect(() => {
+    checkIfUserIsLoggedIn();
+  }, []);
 
   // submission of form
   const onSubmit = (data: any) => {
     setLoading(true);
     console.log(data);
-    setTimeout(() => {
+    signIn(data.email, data.password);
+    setLoading(false);
+  };
+
+  // sign in user
+  const signIn = async (email: string, password: string) => {
+    try {
+      const response = await fetch("/api/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.success) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setLoading(false);
+        router.push("HomeComponent");
+      }
+    } catch (error) {
+      setErrorMessage((error as any).message);
       setLoading(false);
-    }, 9000);
+      setErrorSigningIn(true);
+    }
   };
 
   return (
@@ -108,6 +147,11 @@ export default function SignIn() {
               <div className=" items-center ml-[10px]">
                 <ThreeDot color="black" size="small" />
               </div>
+            </div>
+          )}
+          {errorSigningIn && (
+            <div className=" mt-[20px] text-red-500 text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] font-bold">
+              {errorMessage}
             </div>
           )}
         </form>
