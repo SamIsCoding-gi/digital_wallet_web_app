@@ -5,7 +5,7 @@ import router, { useRouter } from "next/router";
 import Link from "next/link";
 import { ThreeDot } from "react-loading-indicators";
 
-// data for
+// data for sending money
 interface IFormInput {
   amountToSend: number;
   email: string;
@@ -86,6 +86,7 @@ export default function TransferMoney() {
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
+      const currentUserId = localStorage.getItem("currentUserId");
       const response: Response = await fetch("/api/transfer", {
         method: "POST",
         headers: {
@@ -95,6 +96,7 @@ export default function TransferMoney() {
           amountToSend: amountToSend,
           recipient: selectedRecipient,
           password: data.password,
+          userId: currentUserId,
         }),
       });
       const responseData = await response.json();
