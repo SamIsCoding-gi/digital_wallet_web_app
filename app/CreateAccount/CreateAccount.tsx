@@ -26,6 +26,7 @@ export default function CreateAccount() {
     mode: "onChange",
   });
   const [errorCreatingAccount, setErrorCreatingAccount] = useState(false);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   // compares password and confirms it with retyped password
@@ -33,42 +34,80 @@ export default function CreateAccount() {
 
   // form submission
   const onSubmit = (data: any) => {
+    setErrorCreatingAccount(false);
     setLoading(true);
-    console.log(data);
-    setTimeout(() => {
-      setLoading(false);
-    }, 9000);
+    createAccount(data);
   };
+
+  // {
+  //   "$schema": "https://json.schemastore.org/launchsettings.json",
+  //   "profiles": {
+  //     "http": {
+  //       "commandName": "Project",
+  //       "dotnetRunMessages": true,
+  //       "launchBrowser": false,
+  //       "applicationUrl": "http://localhost:5002",
+  //       "environmentVariables": {
+  //         "ASPNETCORE_ENVIRONMENT": "Development"
+  //       }
+  //     },
+  //     "https": {
+  //       "commandName": "Project",
+  //       "dotnetRunMessages": true,
+  //       "launchBrowser": false,
+  //       "applicationUrl": "https://localhost:7248;http://localhost:5002",
+  //       "environmentVariables": {
+  //         "ASPNETCORE_ENVIRONMENT": "Development"
+  //       }
+  //     }
+  //   }
+  // }
 
   // creates user account
   const createAccount = async (data: IFormInput) => {
     setLoading(true);
-    const userId = `user_${new Date().getTime()}`;
+    const userId = crypto.randomUUID(); // Generate a valid UUID
     const dataWithId = { ...data, id: userId };
+
+    // Log the data being sent
+    console.log("Sending data:", dataWithId);
+
     try {
-      const response = await fetch("/api/create-account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataWithId),
-      });
+      const response = await fetch(
+        "https://localhost:7248/api/users/create-account",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataWithId),
+        }
+      );
+
+      // Log the response status
+      console.log("Response status:", response.status);
+
       if (response.ok) {
         const responseData = await response.json();
-        console.log(responseData);
+        console.log("Response data:", responseData);
 
         // Save user data to local storage
-        localStorage.setItem(userId, JSON.stringify(dataWithId));
+        localStorage.setItem("user", JSON.stringify(dataWithId));
 
         setLoading(false);
       } else {
-        console.error("Failed to create account");
+        const errorText = await response.text();
+        console.error("Failed to create account:", errorText);
+        setErrorMessages([errorText]);
         setErrorCreatingAccount(true);
         setLoading(false);
       }
     } catch (error) {
-      console.error("Failed to create account", error);
+      console.error("Failed to create account:", error);
       setLoading(false);
+      setErrorMessages([
+        error instanceof Error ? error.message : String(error),
+      ]);
       setErrorCreatingAccount(true);
     }
   };
@@ -231,7 +270,7 @@ export default function CreateAccount() {
               }`}
               disabled={!isValid}
             >
-              Sign In
+              Creat Account
             </button>
           ) : (
             <div className=" mt-[20px] items-center justify-items-center">
@@ -242,10 +281,10 @@ export default function CreateAccount() {
           )}
           {errorCreatingAccount && (
             <p
-              className="text-red-700 text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] "
+              className=" mt-[20px] text-red-700 text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] "
               role="alert"
             >
-              Error creating account
+              {errorMessages.join(", ")}{" "}
             </p>
           )}
         </form>

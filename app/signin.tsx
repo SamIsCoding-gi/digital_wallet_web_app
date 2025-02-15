@@ -1,7 +1,7 @@
 "use client";
-import React, { use, useState } from "react";
+import React, { use, useState, useEffect } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
-import router, { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -25,20 +25,22 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [errorSigningIn, setErrorSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
+
+  // Check if user is logged in on component mount
+  useEffect(() => {
+    console.log("Checking if user is logged in");
+    checkIfUserIsLoggedIn();
+  }, []);
 
   // check if user is logged in
   const checkIfUserIsLoggedIn = () => {
     const user = localStorage.getItem("user");
     if (user) {
-      // User is logged in, redirect to home page
+      console.log("User is logged in", user);
       router.push("HomeComponent");
     }
   };
-
-  // Check if user is logged in on component mount
-  React.useEffect(() => {
-    checkIfUserIsLoggedIn();
-  }, []);
 
   // submission of form
   const onSubmit = (data: any) => {
@@ -50,8 +52,9 @@ export default function SignIn() {
 
   // sign in user
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      const response = await fetch("/api/signin", {
+      const response = await fetch("https://localhost:7248/api/users/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,6 +67,10 @@ export default function SignIn() {
         localStorage.setItem("user", JSON.stringify(data.user));
         setLoading(false);
         router.push("HomeComponent");
+      } else {
+        setErrorMessage("Invalid email or password.");
+        setLoading(false);
+        setErrorSigningIn(true);
       }
     } catch (error) {
       setErrorMessage((error as any).message);
@@ -161,9 +168,7 @@ export default function SignIn() {
             Don't have an account?{" "}
             <Link href="/CreateAccount" passHref>
               {" "}
-              <a href="#" className=" text-[#6366f1] hover:underline">
-                Sign Up
-              </a>
+              <span className=" text-[#6366f1] hover:underline">Sign Up</span>
             </Link>
           </p>
         </div>
