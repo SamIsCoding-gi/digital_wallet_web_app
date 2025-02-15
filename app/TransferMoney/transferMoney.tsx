@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler, set } from "react-hook-form";
-import router, { useRouter } from "next/router";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThreeDot } from "react-loading-indicators";
+import Image from "next/image";
 
 // data for sending money
 interface IFormInput {
@@ -23,21 +23,25 @@ interface userDataType {
 
 // data for recipient
 interface recipientDataType {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: number;
-  email: string;
+  LastName: string;
+  FirstName: string;
+  Email: string;
+  Id: string;
+  PhoneNumber: number;
 }
 
 export default function TransferMoney() {
+  const [userData, setUserData] = useState<userDataType | null>(null);
+  const router = useRouter();
+  const [errorLoadingUserData, setErrorLoadingUserData] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingUserData, setLoadingUserData] = useState(false);
   const [lLoadingEmails, setLoadingEmails] = useState(false);
   const [firstName, setFirstName] = useState("Samuel");
   const [errorMessage, setErrorMessage] = useState("");
-  const [balance, setBalance] = useState(500);
   const [amountToSend, setAmountToSend] = useState(0);
   const [amountScreen, setAmountScreen] = useState(true);
+  const [moneyTransfered, setMoneyTransfered] = useState(false);
   const [recipientScreen, setRecipientScreen] = useState(false);
   const [confirmationScreen, setConfirmationScreen] = useState(false);
   const [searchResults, setSearchResults] = useState<recipientDataType[]>([]);
@@ -54,56 +58,87 @@ export default function TransferMoney() {
     mode: "onChange",
   });
 
-  // data template for testing
-  const genericUser: userDataType[] = [
-    {
-      userId: "1",
-      firstName: "Samuel",
-      lastName: "Kamau",
-      phoneNumber: 26096234563,
-      balance: 500,
-      email: "samkaizi40@gmail.com",
-    },
-    {
-      userId: "2",
-      firstName: "John",
-      lastName: "Phiri",
-      phoneNumber: 26096234563,
-      balance: 500,
-      email: "samueltrido@gmail.com",
-    },
-    {
-      userId: "3",
-      firstName: "Kiritana",
-      lastName: "Asuwara",
-      phoneNumber: 26096234563,
-      balance: 500,
-      email: "samuel@gmail.com",
-    },
-  ];
+  // get user data
+  useEffect(() => {
+    setLoadingUserData(true);
+    console.log("Checking if user is logged in");
+    getUserData();
+  }, []);
+
+  // fetches user data and up
+  const getUserData = async () => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      console.error("No user found in localStorage.");
+      setErrorLoadingUserData(true);
+      setLoadingUserData(false);
+
+      return;
+    }
+    const parsedUser = JSON.parse(user);
+    let userId = parsedUser.Id;
+    try {
+      const response = await fetch(
+        `https://localhost:7248/api/users/userData/${userId}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const mappedUserData: userDataType = {
+          userId: data.Id,
+          firstName: data.FirstName,
+          lastName: data.LastName,
+          phoneNumber: Number(data.PhoneNumber),
+          balance: data.Balance,
+          email: data.Email,
+        };
+        console.log("Fetched user data:", mappedUserData);
+        setUserData(mappedUserData);
+        setLoadingUserData(false);
+      } else {
+        console.error("Failed to load user data");
+        setErrorLoadingUserData(true);
+        setLoadingUserData(false);
+      }
+    } catch (error) {
+      console.error("Failed to load user data", error);
+      setErrorLoadingUserData(true);
+      setLoadingUserData(false);
+    }
+  };
 
   // compares password and confirms it with retyped password
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      const currentUserId = localStorage.getItem("currentUserId");
-      const response: Response = await fetch("/api/transfer", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amountToSend: amountToSend,
-          recipient: selectedRecipient,
-          password: data.password,
-          userId: currentUserId,
-        }),
-      });
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("No logged in user.");
+      }
+      const parsedUser = JSON.parse(storedUser);
+      const currentUserId = parsedUser.Id;
+      const response: Response = await fetch(
+        "https://localhost:7248/api/users/transfer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amountToSend: amountToSend,
+            userId: currentUserId,
+            password: data.password,
+            recipientId: selectedRecipient?.Id,
+          }),
+        }
+      );
       const responseData = await response.json();
       console.log(responseData);
       if (responseData.success) {
+        setMoneyTransfered(true);
         setLoading(false);
-        router.push("HomeComponent");
+      } else {
+        setErrorMessage(responseData.message || "Transfer failed.");
+        setLoading(false);
       }
     } catch (error) {
       console.error(error);
@@ -122,8 +157,7 @@ export default function TransferMoney() {
     } else if (recipientScreen) {
       setRecipientScreen(false);
       setConfirmationScreen(true);
-      console.log(selectedRecipient);
-      console.log(selectedRecipient);
+      console.log("selectedRecipient: ", selectedRecipient);
     } else if (confirmationScreen) {
       setConfirmationScreen(false);
       setAmountScreen(true);
@@ -155,7 +189,7 @@ export default function TransferMoney() {
             Enter Amount to transfer!
           </span>
           <span className=" text-[#453E3A] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
-            Amount must be between K10 and K{balance}
+            Amount must be between K10 and K{userData?.balance}
           </span>
         </div>
 
@@ -178,8 +212,12 @@ export default function TransferMoney() {
               onInput={(e) => {
                 const target = e.target as HTMLInputElement;
                 target.value = target.value.replace(/[^0-9]/g, "");
-                if (parseInt(target.value) > balance) {
-                  target.value = balance.toString();
+                if (
+                  userData &&
+                  userData.balance !== undefined &&
+                  parseInt(target.value) > userData.balance
+                ) {
+                  target.value = userData.balance.toString();
                 }
               }}
               {...register("balance", {
@@ -213,10 +251,15 @@ export default function TransferMoney() {
   };
 
   // function to search for recipient by email
-  const searchRecipient = (data: recipientDataType[], email: string) => {
-    const results = data.filter((user) => user.email === email);
+  const searchRecipient = (
+    data: recipientDataType | recipientDataType[],
+    email: string
+  ) => {
+    console.log("users found: ", data);
+    const results = (Array.isArray(data) ? data : [data]).filter((user) =>
+      user.Email.toLowerCase().includes(email.toLowerCase())
+    );
     setSearchResults(results);
-    setLoadingEmails(false);
   };
 
   // function to search for recipient by email
@@ -224,16 +267,32 @@ export default function TransferMoney() {
     setErrorMessage("");
     setLoadingEmails(true);
     try {
-      const response = await fetch("/api/userData");
+      const storedUser = localStorage.getItem("user");
+      const user = localStorage.getItem("user");
+      if (!user) {
+        console.error("No user found in localStorage.");
+        setErrorLoadingUserData(true);
+        setLoading(false);
+
+        return;
+      }
+      const parsedUser = JSON.parse(user);
+      let currentUserId = parsedUser.Id;
+      console.log(currentUserId);
+      const response = await fetch(
+        `https://localhost:7248/api/users/search/${email}?excludeId=${currentUserId}`
+      );
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
+
         searchRecipient(data, email);
+      } else {
+        console.error("User not found");
       }
     } catch (error) {
-      setLoadingEmails(false);
       console.error(error);
     }
+    setLoadingEmails(false);
   };
 
   // screen for selection of reciepient
@@ -269,14 +328,13 @@ export default function TransferMoney() {
             })}
           />
         </form>
-
         {searchResults.length > 0 ? (
           <div className="mt-[10px] w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px]">
             {searchResults.map((result) => (
               <div
-                key={result.userId}
+                key={result.Id}
                 className={` hover:bg-grey-300 py-[10px] px-[5px] border-b border-gray-300 cursor-pointer ${
-                  selectedRecipient?.userId === result.userId
+                  selectedRecipient?.Id === result.Id
                     ? "bg-gray-200 rounded-[10px]"
                     : ""
                 }`}
@@ -289,13 +347,13 @@ export default function TransferMoney() {
                   style={{ width: "100%" }}
                 >
                   <span className="  text-black text-[14px] sm:text-[14px] md:text-[16px] lg:text-[18px] ">
-                    {result.firstName}
+                    {result?.FirstName}
                   </span>
                   <span className=" text-black text-[14px] sm:text-[14px] md:text-[16px] lg:text-[18px] ">
-                    {result.lastName}
+                    {result?.LastName}
                   </span>
                   <span className=" text-black text-[14px] sm:text-[14px] md:text-[16px] lg:text-[18px] ">
-                    {result.email}
+                    {result?.Email}
                   </span>
                 </div>
               </div>
@@ -308,29 +366,40 @@ export default function TransferMoney() {
             </span>
           </div>
         )}
+        <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
+          <button
+            type="button"
+            className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
+            onClick={prevscreen}
+          >
+            Previous
+          </button>
+          <button
+            type="submit"
+            className={`text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] px-[10px] ${
+              selectedRecipient
+                ? "bg-black text-white"
+                : "bg-gray-400 text-gray-700"
+            }`}
+            disabled={!selectedRecipient}
+            onClick={nextscreen}
+          >
+            Next
+          </button>
+        </div>
+        ;
       </div>
     );
   };
 
-  <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
-    <button
-      type="button"
-      className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
-      onClick={prevscreen}
-    >
-      Previous
-    </button>
-    <button
-      type="submit"
-      className={`text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] px-[10px] ${
-        selectedRecipient ? "bg-black text-white" : "bg-gray-400 text-gray-700"
-      }`}
-      disabled={!selectedRecipient}
-      onClick={nextscreen}
-    >
-      Next
-    </button>
-  </div>;
+  // filter date
+  const filterDate = (date: string) => {
+    const newDate = new Date(date);
+    const day = newDate.getDate();
+    const month = newDate.toLocaleString("default", { month: "long" });
+    const year = newDate.getFullYear();
+    return `${day}th ${month} ${year}`;
+  };
 
   // screen for confirmation of transaction
   const mountConfirmationScreen = () => {
@@ -364,7 +433,7 @@ export default function TransferMoney() {
                   Name:
                 </span>
                 <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
-                  {selectedRecipient?.firstName} {selectedRecipient?.lastName}
+                  {selectedRecipient?.FirstName} {selectedRecipient?.LastName}
                 </span>
               </div>
 
@@ -373,7 +442,7 @@ export default function TransferMoney() {
                   Email:
                 </span>
                 <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
-                  {selectedRecipient?.email}
+                  {selectedRecipient?.Email}
                 </span>
               </div>
 
@@ -382,7 +451,7 @@ export default function TransferMoney() {
                   Phone Number:
                 </span>
                 <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
-                  {selectedRecipient?.phoneNumber}
+                  {selectedRecipient?.PhoneNumber}
                 </span>
               </div>
 
@@ -390,7 +459,9 @@ export default function TransferMoney() {
                 <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
                   Date:
                 </span>
-                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]"></span>
+                <span className=" text-[#313131] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  {filterDate(new Date().toISOString())}
+                </span>
               </div>
             </div>
           </div>
@@ -430,8 +501,11 @@ export default function TransferMoney() {
           <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
             <button
               type="button"
-              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] `}
+              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] mt-[20px] rounded-[10px] py-[12px] bg-black text-white px-[10px] ${
+                loading ? "bg-gray-400 text-gray-700" : "bg-black text-white"
+              }`}
               onClick={prevscreen}
+              disabled={loading}
             >
               Previous
             </button>
@@ -463,77 +537,149 @@ export default function TransferMoney() {
     );
   };
 
+  const transferMoneyUi = () => {
+    return (
+      <>
+        {!loadingUserData ? (
+          userData ? (
+            <>
+              <div className="mb-[50px]">
+                <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold ">
+                  Transfer Money
+                </span>
+              </div>
+              <div
+                className=" mr-[] sm:mr-[] md:mr-[30px] lg:mr-[30px] flex flex-col sm:flex-col md:flex-row lg:flex-row items-center justify-center p-[20px] "
+                style={{ width: "100%" }}
+              >
+                <div
+                  className=" mb-[15px] sm:mb-[15px] md:mb-[] lg:mb-[] flex flex-row sm:flex-row md:flex-col lg:flex-col items-start justify-center gap-5"
+                  style={{ width: "100%" }}
+                >
+                  <div
+                    className={` px-[10px] py-[1px] rounded-full  ${
+                      amountScreen
+                        ? " border-[#000000] border-[2px] "
+                        : " border-[1px] border-[#6b6b6b] "
+                    }`}
+                  >
+                    <span
+                      className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                        amountScreen
+                          ? " text-[#000000] text-bold "
+                          : " text-[#6b6b6b] "
+                      }`}
+                    >
+                      1
+                    </span>
+                  </div>
+
+                  <div
+                    className={` px-[10px] py-[1px] rounded-full  ${
+                      recipientScreen
+                        ? " border-[#000000] border-[2px] "
+                        : " border-[#6b6b6b] border-[1px] "
+                    }`}
+                  >
+                    <span
+                      className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                        recipientScreen
+                          ? " text-[#000000] text-bold "
+                          : " text-[#6b6b6b] "
+                      }`}
+                    >
+                      2
+                    </span>
+                  </div>
+
+                  <div
+                    className={` px-[10px] py-[1px] rounded-full  ${
+                      confirmationScreen
+                        ? " border-[#000000] border-[2px] "
+                        : " border-[#6b6b6b] border-[1px] "
+                    }`}
+                  >
+                    <span
+                      className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
+                        confirmationScreen
+                          ? " text-[#000000] text-bold "
+                          : " text-[#6b6b6b] "
+                      }`}
+                    >
+                      3
+                    </span>
+                  </div>
+                </div>
+                {amountScreen && mountAmountScreen()}
+                {recipientScreen && mountRecipientScreen()}
+                {confirmationScreen && mountConfirmationScreen()}
+              </div>
+            </>
+          ) : (
+            <div className=" flex flex-col items-center justify-items-center  ">
+              <span className=" text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
+                Error loading user data. Please try again later.
+              </span>
+              <button
+                className=" bg-black ml-[20px] p-[10px] rounded-[10px]"
+                onClick={getUserData}
+              >
+                <span
+                  className="text-white text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]"
+                  id="try-again"
+                >
+                  Try again
+                </span>
+              </button>
+            </div>
+          )
+        ) : (
+          <div className=" flex flex-col items-center justify-items-center  ">
+            <div className=" items-center ml-[10px]">
+              <ThreeDot color="black" size="small" />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const successFullTransfer = () => {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <Image
+          src="/transfer_success.png"
+          alt="Success"
+          width={150}
+          height={150}
+          className="mb-[20px] h-[90px] w-[90px] sm:h-[100px] sm:w-[100px] md:h-[150px] md:w-[150px] lg:h-[150px] lg:w-[150px]"
+        />
+        <span className="text-[#278727] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
+          Transfer Successful
+        </span>
+
+        <button
+          className=" gap-5 flex flex-row items-center bg-black mt-[20px] p-[10px] rounded-[10px]"
+          onClick={() => router.back()}
+        >
+          <Image
+            src="/back.png"
+            alt="Success"
+            width={150}
+            height={150}
+            className=" h-[30px] w-[30px] sm:h-[35px] sm:w-[35px] md:h-[40px] md:w-[40px] lg:h-[45px] lg:w-[45px] filter invert"
+          />
+          <span className="text-white text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+            Go back home
+          </span>
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center font-[family-name:var(--font-geist-sans)] flex-col">
-      <div className="mb-[50px]">
-        <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold ">
-          Transfer Money
-        </span>
-      </div>
-      <div
-        className=" mr-[] sm:mr-[] md:mr-[30px] lg:mr-[30px] flex flex-col sm:flex-col md:flex-row lg:flex-row items-center justify-center p-[20px] "
-        style={{ width: "100%" }}
-      >
-        <div
-          className=" mb-[15px] sm:mb-[15px] md:mb-[] lg:mb-[] flex flex-row sm:flex-row md:flex-col lg:flex-col items-start justify-center gap-5"
-          style={{ width: "100%" }}
-        >
-          <div
-            className={` px-[10px] py-[1px] rounded-full  ${
-              amountScreen
-                ? " border-[#000000] border-[2px] "
-                : " border-[1px] border-[#6b6b6b] "
-            }`}
-          >
-            <span
-              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
-                amountScreen ? " text-[#000000] text-bold " : " text-[#6b6b6b] "
-              }`}
-            >
-              1
-            </span>
-          </div>
-
-          <div
-            className={` px-[10px] py-[1px] rounded-full  ${
-              recipientScreen
-                ? " border-[#000000] border-[2px] "
-                : " border-[#6b6b6b] border-[1px] "
-            }`}
-          >
-            <span
-              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
-                recipientScreen
-                  ? " text-[#000000] text-bold "
-                  : " text-[#6b6b6b] "
-              }`}
-            >
-              2
-            </span>
-          </div>
-
-          <div
-            className={` px-[10px] py-[1px] rounded-full  ${
-              confirmationScreen
-                ? " border-[#000000] border-[2px] "
-                : " border-[#6b6b6b] border-[1px] "
-            }`}
-          >
-            <span
-              className={` text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ${
-                confirmationScreen
-                  ? " text-[#000000] text-bold "
-                  : " text-[#6b6b6b] "
-              }`}
-            >
-              3
-            </span>
-          </div>
-        </div>
-        {amountScreen && mountAmountScreen()}
-        {recipientScreen && mountRecipientScreen()}
-        {confirmationScreen && mountConfirmationScreen()}
-      </div>
+      {moneyTransfered ? successFullTransfer() : transferMoneyUi()}
     </div>
   );
 }

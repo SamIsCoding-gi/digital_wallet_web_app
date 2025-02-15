@@ -27,21 +27,6 @@ export default function SignIn() {
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  // Check if user is logged in on component mount
-  useEffect(() => {
-    console.log("Checking if user is logged in");
-    checkIfUserIsLoggedIn();
-  }, []);
-
-  // check if user is logged in
-  const checkIfUserIsLoggedIn = () => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      console.log("User is logged in", user);
-      router.push("HomeComponent");
-    }
-  };
-
   // submission of form
   const onSubmit = (data: any) => {
     setLoading(true);

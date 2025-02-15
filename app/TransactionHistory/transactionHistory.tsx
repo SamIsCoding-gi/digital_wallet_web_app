@@ -7,14 +7,14 @@ import { ThreeDot } from "react-loading-indicators";
 import { error } from "console";
 
 interface transactionData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phonenumber: number;
-  date: string;
-  invoice: string;
-  amount: number;
-  type: string;
+  FirstName: string;
+  LastName: string;
+  Email: string;
+  PhoneNumber: number;
+  TransactionDate: string;
+  TransactionId: string;
+  Amount: number;
+  Type: string;
 }
 export default function TransactionHistory() {
   const [transactionHistorydata, setTransactionHistoryData] = useState<
@@ -26,105 +26,36 @@ export default function TransactionHistory() {
 
   useEffect(() => {
     setLoading(true);
+    console.log("getting Transaction history");
     getTransactionHistory();
   }, []);
 
   // fetches transaction history
   const getTransactionHistory = async () => {
+    setLoading(true);
     try {
-      const response = await fetch("/api/transactionHistory");
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("No logged-in user found.");
+      }
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.Id;
+      const response = await fetch(
+        `https://localhost:7248/api/users/transactionHistory/${userId}`
+      );
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         setTransactionHistoryData(data);
+        setLoading(false);
+      } else {
+        console.error("Failed to fetch transaction history");
         setLoading(false);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setLoading(false);
     }
-  };
-
-  const dummyTransactions: transactionData[] = [
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/04/02",
-      invoice: "73hfn74",
-      amount: 300,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/04/02",
-      invoice: "73hfn74",
-      amount: 300,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/04/02",
-      invoice: "73hfn74",
-      amount: 300,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/04/02",
-      invoice: "73hfn74",
-      amount: 300,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/02/02",
-      invoice: "73hf74n74",
-      amount: 500,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/02/02",
-      invoice: "73hf74n74",
-      amount: 500,
-      type: "credit",
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Kibunda",
-      email: "samkaizi40@gmail.com",
-      phonenumber: 2609738273647,
-      date: "2025/02/02",
-      invoice: "73hf74n74",
-      amount: 500,
-      type: "credit",
-    },
-  ];
-
-  // search for transaction by email
-  const handleEmailSearch = (invoice: string) => {
-    // Simulate an API call to search for recipients by email
-    const results = dummyTransactions.filter((history) =>
-      history.invoice.toLowerCase().includes(invoice.toLowerCase())
-    );
-    console.log(results);
-    setTransactionHistoryData(results);
   };
 
   const [showAll, setShowAll] = useState(false);
@@ -133,8 +64,21 @@ export default function TransactionHistory() {
     setShowAll(!showAll);
   };
 
+  // filter date
+  const filterDate = (date: string) => {
+    const newDate = new Date(date);
+    const day = newDate.getDate();
+    const month = newDate.toLocaleString("default", { month: "long" });
+    const year = newDate.getFullYear();
+    const hours = newDate.getHours();
+    const minutes = newDate.getMinutes();
+    return `${day}th ${month} ${year}, ${hours}:${
+      minutes < 10 ? `0${minutes}` : minutes
+    }`;
+  };
+
   return (
-    <div className="flex-1 h-screen font-[family-name:var(--font-geist-sans)] flex-col">
+    <div className=" font-[family-name:var(--font-geist-sans)] flex-col ">
       {loading ? (
         <div className="flex flex-col items-center justify-center">
           <ThreeDot color="#000000" size="large" />
@@ -154,53 +98,55 @@ export default function TransactionHistory() {
           </div>
         </div>
       ) : (
-        <>
+        <div className=" flex-1 ">
           <div className="mb-[10px] flex flex-col justify-items-center">
             <span className="text-center text-[#313131] text-[18px] sm:text-[23px] md:text-[27px] lg:text-[30px] text-bold">
               Transactions
             </span>
           </div>
 
-          <div className="flex flex-col mx-[10px]">
+          <div className=" flex flex-col  ">
             <div>
-              {dummyTransactions.length > 0 ? (
-                <div className="mx-[1%] sm:mx-[50px] md:mx-[50px] lg:mx-[50px]">
+              {transactionHistorydata.length > 0 ? (
+                <div className="  mx-[1%] sm:mx-[100px] md:mx-[150px] lg:mx-[200px]">
                   {(showAll
-                    ? dummyTransactions
-                    : dummyTransactions.slice(0, 5)
+                    ? transactionHistorydata
+                    : transactionHistorydata.slice(0, 5)
                   ).map((transaction, index) => (
                     <div
                       key={index}
-                      className="bg-[#ececec] p-[10px] rounded-[10px] justify-between min-w-full flex flex-row mb-[10px] items-center"
+                      className=" bg-[#ececec] p-[10px] rounded-[10px] justify-between min-w-full flex flex-row mb-[10px] items-center"
                     >
                       <div className="flex flex-col">
                         <span className="text-[#000000] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                          {transaction.firstName} {transaction.lastName}
+                          {transaction?.FirstName} {transaction?.LastName}
                         </span>
                         <span className="text-[#5f5f5f] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                          {transaction.phonenumber}
+                          {transaction?.PhoneNumber}
                         </span>
                       </div>
 
                       <span className="text-[#5f5f5f] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                        {transaction.date}
+                        {filterDate(transaction?.TransactionDate)}
                       </span>
                       <span className="text-[#5f5f5f] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                        {transaction.invoice}
+                        {transaction?.TransactionId.slice(0, 8)}...
                       </span>
                       <div className="flex flex-row">
-                        {transaction.type === "credit" && (
-                          <span className="text-[#000000] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] text-bold">
-                            -
-                          </span>
-                        )}
-                        <span className="text-[#000000] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] text-bold">
-                          {transaction.amount}
+                        <span
+                          className={`text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] text-bold ${
+                            transaction?.Type === "credit"
+                              ? "text-[#ff0000]"
+                              : "text-[#008000]"
+                          }`}
+                        >
+                          {transaction?.Type === "credit" ? "-" : "+"} K{" "}
+                          {transaction?.Amount}
                         </span>
                       </div>
                     </div>
                   ))}
-                  {dummyTransactions.length > 5 && (
+                  {transactionHistorydata.length > 5 && (
                     <div className=" flex-1 items-center justify-items-center">
                       <button
                         onClick={handleShowMore}
@@ -218,7 +164,7 @@ export default function TransactionHistory() {
                   </span>
                   <div className="bg-[black] p-[10px] rounded-[10px] flex flex-col justify-items-center items-center justify-center">
                     <button
-                      onClick={() => handleEmailSearch("")}
+                      onClick={() => getTransactionHistory()}
                       className="mt-[10px] text-[#ffffff] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]"
                     >
                       Retry
@@ -228,7 +174,7 @@ export default function TransactionHistory() {
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
