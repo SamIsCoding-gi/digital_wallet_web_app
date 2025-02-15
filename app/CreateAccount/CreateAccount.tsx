@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler, set } from "react-hook-form";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -28,6 +28,7 @@ export default function CreateAccount() {
   const [errorCreatingAccount, setErrorCreatingAccount] = useState(false);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // compares password and confirms it with retyped password
   const password = watch("password");
@@ -38,30 +39,6 @@ export default function CreateAccount() {
     setLoading(true);
     createAccount(data);
   };
-
-  // {
-  //   "$schema": "https://json.schemastore.org/launchsettings.json",
-  //   "profiles": {
-  //     "http": {
-  //       "commandName": "Project",
-  //       "dotnetRunMessages": true,
-  //       "launchBrowser": false,
-  //       "applicationUrl": "http://localhost:5002",
-  //       "environmentVariables": {
-  //         "ASPNETCORE_ENVIRONMENT": "Development"
-  //       }
-  //     },
-  //     "https": {
-  //       "commandName": "Project",
-  //       "dotnetRunMessages": true,
-  //       "launchBrowser": false,
-  //       "applicationUrl": "https://localhost:7248;http://localhost:5002",
-  //       "environmentVariables": {
-  //         "ASPNETCORE_ENVIRONMENT": "Development"
-  //       }
-  //     }
-  //   }
-  // }
 
   // creates user account
   const createAccount = async (data: IFormInput) => {
@@ -93,7 +70,7 @@ export default function CreateAccount() {
 
         // Save user data to local storage
         localStorage.setItem("user", JSON.stringify(dataWithId));
-
+        router.back();
         setLoading(false);
       } else {
         const errorText = await response.text();
