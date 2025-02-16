@@ -78,7 +78,7 @@ export default function TransactionHistory() {
   };
 
   return (
-    <div className=" font-[family-name:var(--font-geist-sans)] flex-col ">
+    <div className=" font-[family-name:var(--font-geist-sans)] flex-col bg-white ">
       {loading ? (
         <div className="flex flex-col items-center justify-center">
           <ThreeDot color="#000000" size="large" />
@@ -98,9 +98,9 @@ export default function TransactionHistory() {
           </div>
         </div>
       ) : (
-        <div className=" flex-1 ">
+        <div className=" flex-1 w-full">
           <div className="mb-[10px] flex flex-col justify-items-center">
-            <span className="text-center text-[#313131] text-[18px] sm:text-[23px] md:text-[27px] lg:text-[30px] text-bold">
+            <span className="text-center text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-boldtext-[#373737] text-[16px] sm:text-[28px] md:text-[23px] lg:text-[25px] font-bold">
               Transactions
             </span>
           </div>

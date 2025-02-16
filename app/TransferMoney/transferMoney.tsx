@@ -37,7 +37,6 @@ export default function TransferMoney() {
   const [loading, setLoading] = useState(false);
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [lLoadingEmails, setLoadingEmails] = useState(false);
-  const [firstName, setFirstName] = useState("Samuel");
   const [errorMessage, setErrorMessage] = useState("");
   const [amountToSend, setAmountToSend] = useState(0);
   const [amountScreen, setAmountScreen] = useState(true);
@@ -61,7 +60,6 @@ export default function TransferMoney() {
   // get user data
   useEffect(() => {
     setLoadingUserData(true);
-    console.log("Checking if user is logged in");
     getUserData();
   }, []);
 
@@ -680,6 +678,13 @@ export default function TransferMoney() {
   return (
     <div className="flex min-h-screen items-center justify-center font-[family-name:var(--font-geist-sans)] flex-col">
       {moneyTransfered ? successFullTransfer() : transferMoneyUi()}
+      <div className="ml-[30px] mt-[35px] items-center justify-items-center">
+        <div>
+          <span className="  text-black text-[15px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
+            © 2025 Samuel Kibunda
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function SignIn() {
       if (data.success) {
         localStorage.setItem("user", JSON.stringify(data.user));
         setLoading(false);
-        router.push("HomeComponent");
+        window.location.href = "/";
       } else {
         setErrorMessage("Invalid email or password.");
         setLoading(false);
@@ -71,7 +71,7 @@ export default function SignIn() {
           Samuel's Digital Wallet App
         </span>
       </div>
-      <div className="flex justify-items-center items-center flex-col shadow-lg bg-white rounded-[12px] p-[50px]">
+      <div className=" rounded-[12px] border-[1px] border-[#cbd2d6] flex justify-items-center items-center flex-col shadow-lg bg-white rounded-[12px] p-[50px]">
         <h1 className=" text-[#737373] text-[25px] sm:text-[30px] md:text-[37px] lg:text-[40px] font-bold text-">
           Sign In
         </h1>
@@ -143,7 +143,7 @@ export default function SignIn() {
           )}
           {errorSigningIn && (
             <div className=" mt-[20px] text-red-500 text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] font-bold">
-              {errorMessage}
+              Email/password is incorrect. Try again
             </div>
           )}
         </form>

@@ -43,11 +43,8 @@ export default function CreateAccount() {
   // creates user account
   const createAccount = async (data: IFormInput) => {
     setLoading(true);
-    const userId = crypto.randomUUID(); // Generate a valid UUID
-    const dataWithId = { ...data, id: userId };
-
-    // Log the data being sent
-    console.log("Sending data:", dataWithId);
+    const userId = crypto.randomUUID();
+    const dataWithId = { ...data, Id: userId };
 
     try {
       const response = await fetch(
@@ -61,17 +58,13 @@ export default function CreateAccount() {
         }
       );
 
-      // Log the response status
-      console.log("Response status:", response.status);
-
       if (response.ok) {
         const responseData = await response.json();
         console.log("Response data:", responseData);
-
-        // Save user data to local storage
         localStorage.setItem("user", JSON.stringify(dataWithId));
-        router.back();
+        console.log("Created user: ", dataWithId);
         setLoading(false);
+        router.back();
       } else {
         const errorText = await response.text();
         console.error("Failed to create account:", errorText);
@@ -91,7 +84,7 @@ export default function CreateAccount() {
 
   return (
     <div className="flex min-h-screen items-center justify-center font-[family-name:var(--font-geist-sans)] flex-col">
-      <div className=" mb-[100px] mt-[100px] flex justify-items-center items-center flex-col shadow-lg bg-white rounded-[12px] p-[50px]">
+      <div className=" rounded-[12px] border-[1px] border-[#cbd2d6] mb-[5px] mt-[100px] flex justify-items-center items-center flex-col shadow-lg bg-white rounded-[12px] p-[50px]">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] "
@@ -265,6 +258,11 @@ export default function CreateAccount() {
             </p>
           )}
         </form>
+      </div>
+      <div className="ml-[30px] mt-[35px]">
+        <span className="  text-black text-[15px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
+          © 2025 Samuel Kibunda
+        </span>
       </div>
     </div>
   );

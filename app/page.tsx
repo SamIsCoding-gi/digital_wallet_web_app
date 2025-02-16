@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import SignIn from "./signin";
 import { useRouter } from "next/navigation";
 import HomeComponent from "./HomeComponent/home";
-import TransferMoney from "./TransferMoney/transferMoney";
 import TransactionHistory from "./TransactionHistory/transactionHistory";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -13,6 +11,7 @@ export default function Home() {
   const router = useRouter();
   const [isloggedIn, setIsLoggedIn] = useState(true);
   const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     console.log("Checking if user is logged in");
     checkIfUserIsLoggedIn();
@@ -30,11 +29,28 @@ export default function Home() {
     }
   };
 
+  const loggingOut = () => {
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+  };
+
   return (
     <div className=" flex-1 min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">
       {!loading ? (
         isloggedIn ? (
-          <div className=" min-h-screen">
+          <div className=" min-h-screen mx-[10px]">
+            <div className=" flex flex-row justify-between w-full items-center ">
+              <button
+                className=" p-[5px] rounded-[10px] "
+                onClick={() => {
+                  loggingOut();
+                }}
+              >
+                <span className=" text-red-900 text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  Log Out
+                </span>
+              </button>
+            </div>
             <HomeComponent />
             <TransactionHistory />
           </div>
@@ -46,6 +62,15 @@ export default function Home() {
           <ThreeDot color="black" size="small" />
         </div>
       )}
+      <div className="ml-[30px] mt-[35px] items-center justify-items-center">
+        <div>
+          <span className="  text-black text-[15px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
+            © 2025 Samuel Kibunda
+          </span>
+        </div>
+      </div>
+
+      <div className="py-[10px] bg-white"></div>
     </div>
   );
 }
