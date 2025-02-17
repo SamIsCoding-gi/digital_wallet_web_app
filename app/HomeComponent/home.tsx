@@ -7,13 +7,18 @@ import Link from "next/link";
 import TransactionHistory from "../TransactionHistory/transactionHistory";
 import { ThreeDot } from "react-loading-indicators";
 
+interface WalletData {
+  UserId: string;
+  Balance: number;
+}
+
 interface userDataType {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: number;
-  balance: number;
-  email: string;
+  Id: string;
+  FirstName: string;
+  LastName: string;
+  PhoneNumber: number;
+  Balance: number;
+  Email: string;
 }
 
 // greets user depending on time of day
@@ -43,8 +48,9 @@ interface transactionData {
 }
 
 export default function HomeComponent() {
+  const [wallet, setWallet] = useState<WalletData | null>(null);
   const [userData, setUserData] = useState<userDataType | null>(null);
-  const [errorLoadingUserData, setErrorLoadingUserData] = useState(false);
+  const [errorLoadingWalletData, setErrorLoadingWalletData] = useState(false);
   const [greeting, setGreeting] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingMoneyInOut, setLoadingMoneyInOut] = useState(true);
@@ -56,57 +62,85 @@ export default function HomeComponent() {
   useEffect(() => {
     setGreeting(getTimeOfDayGreeting());
     setLoadingMoneyInOut(true);
-    getUserData();
+    const user = localStorage.getItem("user");
+    if (user) {
+      setUserData(JSON.parse(user));
+    }
+    fetchWallet();
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (userData) {
-    }
-  }, [userData]);
-
-  // fetches user data
-  const getUserData = async () => {
-    const user = localStorage.getItem("user");
-    if (!user) {
-      console.error("No user found in localStorage.");
-      setErrorLoadingUserData(true);
-      setLoading(false);
-
-      return;
-    }
-    const parsedUser = JSON.parse(user);
-    console.log("Home screen user: ", parsedUser);
-    let userId = parsedUser.Id;
+  const fetchWallet = async () => {
     setLoading(true);
     try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("No logged-in user found.");
+      }
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.Id;
       const response = await fetch(
-        `https://localhost:7248/api/users/userData/${userId}`
+        `https://localhost:7248/api/users/wallet/${userId}`
       );
       if (response.ok) {
         const data = await response.json();
-        const mappedUserData: userDataType = {
-          userId: data.Id,
-          firstName: data.FirstName,
-          lastName: data.LastName,
-          phoneNumber: Number(data.PhoneNumber),
-          balance: data.Balance,
-          email: data.Email,
-        };
-        setUserData(mappedUserData);
+        console.log("current users wallet: ", data);
         getTransactionHistory();
-        setLoading(false);
+
+        setWallet(data);
       } else {
-        console.error("Failed to load user data");
-        setErrorLoadingUserData(true);
         setLoading(false);
+        setErrorLoadingWalletData(true);
       }
-    } catch (error) {
-      console.error("Failed to load user data", error);
-      setErrorLoadingUserData(true);
+    } catch (err: any) {
       setLoading(false);
+      setErrorLoadingWalletData(true);
     }
+    setLoading(false);
   };
+
+  // fetches user data
+  // const getUserData = async () => {
+  //   const user = localStorage.getItem("user");
+  //   if (!user) {
+  //     console.error("No user found in localStorage.");
+  //     setErrorLoadingWalletData(true);
+  //     setLoading(false);
+
+  //     return;
+  //   }
+  //   const parsedUser = JSON.parse(user);
+  //   console.log("Home screen user: ", parsedUser);
+  //   let userId = parsedUser.Id;
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `https://localhost:7248/api/users/userData/${userId}`
+  //     );
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       const mappedUserData: userDataType = {
+  //         userId: data.Id,
+  //         firstName: data.FirstName,
+  //         lastName: data.LastName,
+  //         phoneNumber: Number(data.PhoneNumber),
+  //         balance: data.Balance,
+  //         email: data.Email,
+  //       };
+  //       setUserData(mappedUserData);
+  //       getTransactionHistory();
+  //       setLoading(false);
+  //     } else {
+  //       console.error("Failed to load user data");
+  //       setErrorLoadingWalletData(true);
+  //       setLoading(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to load user data", error);
+  //     setErrorLoadingWalletData(true);
+  //     setLoading(false);
+  //   }
+  // };
 
   // fetches transaction history
   const getTransactionHistory = async () => {
@@ -122,7 +156,7 @@ export default function HomeComponent() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
+        console.log("Transaction history: ", data);
         setTransactionHistoryData(data);
         const totals = calculateTransactionTotals(data);
         setMoneyInOut([totals.moneyIn, totals.moneyOut]);
@@ -141,9 +175,9 @@ export default function HomeComponent() {
   const calculateTransactionTotals = (transactions: transactionData[]) => {
     return transactions.reduce(
       (acc, tx) => {
-        if (tx.Type && tx.Type.toLowerCase() === "credit") {
+        if (tx.Type && tx.Type.toLowerCase() === "debit") {
           acc.moneyOut += Number(tx.Amount);
-        } else if (tx.Type && tx.Type.toLowerCase() === "debit") {
+        } else if (tx.Type && tx.Type.toLowerCase() === "credit") {
           acc.moneyIn += Number(tx.Amount);
         }
         return acc;
@@ -158,14 +192,14 @@ export default function HomeComponent() {
         className=" mb-[50px] flex flex-col items-center justify-items-center "
         id="home"
       >
-        {errorLoadingUserData ? (
+        {errorLoadingWalletData ? (
           <div className="flex flex-col justify-center justify-center mx-[10px]">
             <span className="text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
               Error loading user data. Please try again later.
             </span>
             <button
               className="mt-[10px] bg-black p-[10px] rounded-[10px]"
-              onClick={getUserData}
+              onClick={fetchWallet}
             >
               <span className="text-white text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
                 Retry
@@ -176,7 +210,7 @@ export default function HomeComponent() {
           <div className="flex flex-col items-center  ">
             <div className=" mt-[50px]"></div>
             <span className=" text-[#373737] text-[16px] sm:text-[28px] md:text-[23px] lg:text-[25px] font-bold ">
-              {greeting} {userData?.firstName}
+              {greeting} {userData?.FirstName}
             </span>
 
             <div className=" rounded-[12px] border-[1px] border-[#cbd2d6] shadow-lg rounded-[12px] py-[50px] sm:py-[60px] md:py-[70px] lg:py-[80px] px-[100px] sm:px-[100px] md:px-[100px] lg:px-[100px] mx-[00px] bg-white flex flex-col items-center mt-[20px]">
@@ -186,7 +220,7 @@ export default function HomeComponent() {
                     Your balance
                   </span>
                   <span className="text-[#278727] text-[24px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-                    K{userData?.balance} ZMW
+                    K{wallet?.Balance} ZMW
                   </span>
                   <span className=" text-black text-bold text-[16px] sm:text-[18px] md:text-[23px] lg:text-[25px] ">
                     Available

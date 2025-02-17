@@ -6,19 +6,18 @@ import Link from "next/link";
 import { ThreeDot } from "react-loading-indicators";
 import { error } from "console";
 
-interface transactionData {
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  PhoneNumber: number;
-  TransactionDate: string;
+export interface TransactionData {
   TransactionId: string;
+  UserId: string;
+  CounterPartyFirstName: string;
+  CounterPartyLastName: string;
+  TransactionDate: string;
   Amount: number;
   Type: string;
 }
 export default function TransactionHistory() {
   const [transactionHistorydata, setTransactionHistoryData] = useState<
-    transactionData[]
+    TransactionData[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [errorLoadingTransactionHistory, setErrorLoadingTransactionHistory] =
@@ -119,10 +118,9 @@ export default function TransactionHistory() {
                     >
                       <div className="flex flex-col">
                         <span className="text-[#000000] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                          {transaction?.FirstName} {transaction?.LastName}
-                        </span>
-                        <span className="text-[#5f5f5f] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">
-                          {transaction?.PhoneNumber}
+                          {transaction?.Type === "credit"
+                            ? `From: ${transaction?.CounterPartyFirstName} ${transaction?.CounterPartyLastName}`
+                            : `To: ${transaction?.CounterPartyFirstName} ${transaction?.CounterPartyLastName}`}
                         </span>
                       </div>
 
@@ -136,11 +134,11 @@ export default function TransactionHistory() {
                         <span
                           className={`text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] text-bold ${
                             transaction?.Type === "credit"
-                              ? "text-[#ff0000]"
-                              : "text-[#008000]"
+                              ? "text-[#008000]"
+                              : "text-[#ff0000]"
                           }`}
                         >
-                          {transaction?.Type === "credit" ? "-" : "+"} K{" "}
+                          {transaction?.Type === "credit" ? "+" : "-"} K{" "}
                           {transaction?.Amount}
                         </span>
                       </div>

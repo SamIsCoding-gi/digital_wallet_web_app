@@ -11,14 +11,18 @@ interface IFormInput {
   email: string;
 }
 
-// data for user
+interface WalletData {
+  UserId: string;
+  Balance: number;
+}
+
 interface userDataType {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: number;
-  balance: number;
-  email: string;
+  Id: string;
+  FirstName: string;
+  LastName: string;
+  PhoneNumber: number;
+  Balance: number;
+  Email: string;
 }
 
 // data for recipient
@@ -32,10 +36,10 @@ interface recipientDataType {
 
 export default function TransferMoney() {
   const [userData, setUserData] = useState<userDataType | null>(null);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
   const router = useRouter();
-  const [errorLoadingUserData, setErrorLoadingUserData] = useState(false);
+  const [errorLoadingWalletData, setErrorLoadingWalletData] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadingUserData, setLoadingUserData] = useState(false);
   const [lLoadingEmails, setLoadingEmails] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [amountToSend, setAmountToSend] = useState(0);
@@ -59,49 +63,34 @@ export default function TransferMoney() {
 
   // get user data
   useEffect(() => {
-    setLoadingUserData(true);
-    getUserData();
+    fetchWallet();
   }, []);
 
-  // fetches user data and up
-  const getUserData = async () => {
-    const user = localStorage.getItem("user");
-    if (!user) {
-      console.error("No user found in localStorage.");
-      setErrorLoadingUserData(true);
-      setLoadingUserData(false);
-
-      return;
-    }
-    const parsedUser = JSON.parse(user);
-    let userId = parsedUser.Id;
+  const fetchWallet = async () => {
+    setLoading(true);
     try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("No logged-in user found.");
+      }
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.Id;
       const response = await fetch(
-        `https://localhost:7248/api/users/userData/${userId}`
+        `https://localhost:7248/api/users/wallet/${userId}`
       );
       if (response.ok) {
         const data = await response.json();
-        const mappedUserData: userDataType = {
-          userId: data.Id,
-          firstName: data.FirstName,
-          lastName: data.LastName,
-          phoneNumber: Number(data.PhoneNumber),
-          balance: data.Balance,
-          email: data.Email,
-        };
-        console.log("Fetched user data:", mappedUserData);
-        setUserData(mappedUserData);
-        setLoadingUserData(false);
+        console.log("current users wallet: ", data);
+        setWallet(data);
       } else {
-        console.error("Failed to load user data");
-        setErrorLoadingUserData(true);
-        setLoadingUserData(false);
+        setLoading(false);
+        setErrorLoadingWalletData(true);
       }
-    } catch (error) {
-      console.error("Failed to load user data", error);
-      setErrorLoadingUserData(true);
-      setLoadingUserData(false);
+    } catch (err: any) {
+      setLoading(false);
+      setErrorLoadingWalletData(true);
     }
+    setLoading(false);
   };
 
   // compares password and confirms it with retyped password
@@ -114,6 +103,7 @@ export default function TransferMoney() {
       }
       const parsedUser = JSON.parse(storedUser);
       const currentUserId = parsedUser.Id;
+      console.log(amountToSend,currentUserId,data.password, selectedRecipient?.Id)
       const response: Response = await fetch(
         "https://localhost:7248/api/users/transfer",
         {
@@ -187,7 +177,7 @@ export default function TransferMoney() {
             Enter Amount to transfer!
           </span>
           <span className=" text-[#453E3A] text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px] ">
-            Amount must be between K10 and K{userData?.balance}
+            Amount must be between K10 and K{wallet?.Balance}
           </span>
         </div>
 
@@ -211,11 +201,11 @@ export default function TransferMoney() {
                 const target = e.target as HTMLInputElement;
                 target.value = target.value.replace(/[^0-9]/g, "");
                 if (
-                  userData &&
-                  userData.balance !== undefined &&
-                  parseInt(target.value) > userData.balance
+                  wallet &&
+                  wallet?.Balance !== undefined &&
+                  parseInt(target.value) > wallet?.Balance
                 ) {
-                  target.value = userData.balance.toString();
+                  target.value = wallet?.Balance.toString();
                 }
               }}
               {...register("balance", {
@@ -269,7 +259,7 @@ export default function TransferMoney() {
       const user = localStorage.getItem("user");
       if (!user) {
         console.error("No user found in localStorage.");
-        setErrorLoadingUserData(true);
+        setErrorLoadingWalletData(true);
         setLoading(false);
 
         return;
@@ -538,8 +528,8 @@ export default function TransferMoney() {
   const transferMoneyUi = () => {
     return (
       <>
-        {!loadingUserData ? (
-          userData ? (
+        {!errorLoadingWalletData ? (
+          wallet? (
             <>
               <div className="mb-[50px]">
                 <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold ">
@@ -616,11 +606,11 @@ export default function TransferMoney() {
           ) : (
             <div className=" flex flex-col items-center justify-items-center  ">
               <span className=" text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-                Error loading user data. Please try again later.
+                Error loading Wallet data. Please try again later.
               </span>
               <button
                 className=" bg-black ml-[20px] p-[10px] rounded-[10px]"
-                onClick={getUserData}
+                onClick={fetchWallet}
               >
                 <span
                   className="text-white text-[16px] sm:text-[16px] md:text-[18px] lg:text-[20px]"
