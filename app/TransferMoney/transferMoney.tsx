@@ -46,6 +46,7 @@ export default function TransferMoney() {
   const [amountScreen, setAmountScreen] = useState(true);
   const [moneyTransfered, setMoneyTransfered] = useState(false);
   const [recipientScreen, setRecipientScreen] = useState(false);
+  const [noUserFound, setNoUserFound] = useState(false);
   const [confirmationScreen, setConfirmationScreen] = useState(false);
   const [searchResults, setSearchResults] = useState<recipientDataType[]>([]);
   const [selectedRecipient, setSelectedRecipient] =
@@ -103,7 +104,12 @@ export default function TransferMoney() {
       }
       const parsedUser = JSON.parse(storedUser);
       const currentUserId = parsedUser.Id;
-      console.log(amountToSend,currentUserId,data.password, selectedRecipient?.Id)
+      console.log(
+        amountToSend,
+        currentUserId,
+        data.password,
+        selectedRecipient?.Id
+      );
       const response: Response = await fetch(
         "https://localhost:7248/api/users/transfer",
         {
@@ -252,6 +258,7 @@ export default function TransferMoney() {
 
   // function to search for recipient by email
   const handleEmailSearch = async (email: string) => {
+    setNoUserFound(false);
     setErrorMessage("");
     setLoadingEmails(true);
     try {
@@ -261,7 +268,7 @@ export default function TransferMoney() {
         console.error("No user found in localStorage.");
         setErrorLoadingWalletData(true);
         setLoading(false);
-
+        setNoUserFound(true);
         return;
       }
       const parsedUser = JSON.parse(user);
@@ -276,9 +283,11 @@ export default function TransferMoney() {
         searchRecipient(data, email);
       } else {
         console.error("User not found");
+        setNoUserFound(true);
       }
     } catch (error) {
       console.error(error);
+      setNoUserFound(true);
     }
     setLoadingEmails(false);
   };
@@ -348,11 +357,15 @@ export default function TransferMoney() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center ">
-            <span className="text-[#ff0000] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
-              No users found.
-            </span>
-          </div>
+          <>
+            {noUserFound && (
+              <div className="flex flex-col items-center justify-center ">
+                <span className="text-[#ff0000] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                  No users found.
+                </span>
+              </div>
+            )}
+          </>
         )}
         <div className=" justify-between flex flex-row w-[300px] sm:w-[350px] md:w-[400px] lg:w-[400px] ">
           <button
@@ -516,8 +529,12 @@ export default function TransferMoney() {
             )}
           </div>
           {errorMessage && (
-            <div className=" mt-[20px] text-red-500 text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] font-bold">
-              {errorMessage}
+            <div className=" items-center justify-items-center mt-[20px] ">
+              <div>
+                <span className=" text-red-500 text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-bold ">
+                  Error sending money please try again!
+                </span>
+              </div>
             </div>
           )}
         </form>
@@ -529,7 +546,7 @@ export default function TransferMoney() {
     return (
       <>
         {!errorLoadingWalletData ? (
-          wallet? (
+          wallet ? (
             <>
               <div className="mb-[50px]">
                 <span className=" text-[#373737] text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold ">
@@ -606,7 +623,7 @@ export default function TransferMoney() {
           ) : (
             <div className=" flex flex-col items-center justify-items-center  ">
               <span className=" text-red-500 text-[20px] sm:text-[25px] md:text-[30px] lg:text-[35px] font-bold">
-                Error loading Wallet data. Please try again later.
+                Error loading Wallet data.
               </span>
               <button
                 className=" bg-black ml-[20px] p-[10px] rounded-[10px]"

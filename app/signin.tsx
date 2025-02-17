@@ -30,9 +30,7 @@ export default function SignIn() {
   // submission of form
   const onSubmit = (data: any) => {
     setLoading(true);
-    console.log(data);
     signIn(data.email, data.password);
-    setLoading(false);
   };
 
   // sign in user
@@ -50,6 +48,7 @@ export default function SignIn() {
       console.log(data);
       if (data.success) {
         localStorage.setItem("user", JSON.stringify(data.user));
+        console.log("success");
         setLoading(false);
         window.location.href = "/";
       } else {
