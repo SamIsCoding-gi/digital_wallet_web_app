@@ -59,6 +59,7 @@ export default function TransactionHistory() {
 
   const [showAll, setShowAll] = useState(false);
 
+  // shows more transactions
   const handleShowMore = () => {
     setShowAll(!showAll);
   };

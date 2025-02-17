@@ -99,49 +99,6 @@ export default function HomeComponent() {
     setLoading(false);
   };
 
-  // fetches user data
-  // const getUserData = async () => {
-  //   const user = localStorage.getItem("user");
-  //   if (!user) {
-  //     console.error("No user found in localStorage.");
-  //     setErrorLoadingWalletData(true);
-  //     setLoading(false);
-
-  //     return;
-  //   }
-  //   const parsedUser = JSON.parse(user);
-  //   console.log("Home screen user: ", parsedUser);
-  //   let userId = parsedUser.Id;
-  //   setLoading(true);
-  //   try {
-  //     const response = await fetch(
-  //       `https://localhost:7248/api/users/userData/${userId}`
-  //     );
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       const mappedUserData: userDataType = {
-  //         userId: data.Id,
-  //         firstName: data.FirstName,
-  //         lastName: data.LastName,
-  //         phoneNumber: Number(data.PhoneNumber),
-  //         balance: data.Balance,
-  //         email: data.Email,
-  //       };
-  //       setUserData(mappedUserData);
-  //       getTransactionHistory();
-  //       setLoading(false);
-  //     } else {
-  //       console.error("Failed to load user data");
-  //       setErrorLoadingWalletData(true);
-  //       setLoading(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to load user data", error);
-  //     setErrorLoadingWalletData(true);
-  //     setLoading(false);
-  //   }
-  // };
-
   // fetches transaction history
   const getTransactionHistory = async () => {
     try {

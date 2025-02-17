@@ -33,7 +33,7 @@ export default function CreateAccount() {
   // compares password and confirms it with retyped password
   const password = watch("password");
 
-  // form submission
+  // form submission to create account
   const onSubmit = (data: any) => {
     setErrorCreatingAccount(false);
     setLoading(true);

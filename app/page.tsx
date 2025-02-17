@@ -6,7 +6,7 @@ import HomeComponent from "./HomeComponent/home";
 import TransactionHistory from "./TransactionHistory/transactionHistory";
 import { ThreeDot } from "react-loading-indicators";
 
-// className=" flex-1 bg-white items-center justify-items-center font-[family-name:var(--font-geist-sans)]"
+
 export default function Home() {
   const router = useRouter();
   const [isloggedIn, setIsLoggedIn] = useState(true);
